@@ -126,17 +126,28 @@ bool doMQTTWatchdog(void* v) {
 }
 
 bool superviseWiFi(void* v) {
+  status.SetWifiConnected(WiFi.status() == WL_CONNECTED);
   if (practiceModeEnabled) {
     Serial.println("Practice mode enabled, Configuring softAP");
-    //superviseWiFiAP();
+    superviseWiFiAP(v);
   } else {
     superviseWiFiSTA(v);
   }
   return true;
 }
 
+bool superviseWiFiAP(void*) {
+  switch (WiFi.status()) {
+  case WL_IDLE_STATUS:
+    WiFi.mode(WIFI_AP);
+    WiFi.config(IPAddress(192,168,42,1), IPAddress(0,0,0,0), IPAddress(0,0,0,0), IPAddress(255,255,255,248));
+    WiFi.begin(hostname.c_str(), hostname.c_str());
+    break;
+  }
+  return true;
+}
+
 bool superviseWiFiSTA(void*) {
-  status.SetWifiConnected(WiFi.status() == WL_CONNECTED);
   switch (WiFi.status()) {
   case WL_IDLE_STATUS:
     if (!WiFi.localIP().isSet()) {
